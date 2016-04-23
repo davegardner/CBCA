@@ -1,0 +1,74 @@
+@using Orchard.Mvc.Html
+@using Orchard.ContentManagement
+@using Orchard.Utility.Extensions
+@using Orchard.Taxonomies
+
+@using (Script.Foot())
+{
+    <script type="text/javascript">
+        // NOTES:
+        //  1. jQuery must be enabled for this to work
+        //  2. You must add id='putThisInAContainer' to some element in this template
+        var startElement = $("#putThisInAContainer");
+        if (startElement.parents(".container").length == 0) {
+            startElement.closest(".zone").addClass("container");
+        }
+    </script>
+}
+
+@{
+    var cm = WorkContext.Resolve<IContentManager>();
+}
+
+<div id="putThisInAContainer" class="row">
+    @foreach (var contentItem in Model.ContentItems)
+    {
+
+        var bookPart = contentItem.BookPart;
+        var bookAwardPart = contentItem.BookAwardPart;
+        var bookReviewPart = contentItem.BookReviewPart;
+        var awardsYear = Convert.ToString(bookAwardPart.AwardsYear.Value);
+        var category = bookAwardPart.Category.Value;
+
+        // NB: CBCABookExtensions is in the Cascade.Bootstrap theme
+        var credits = Cascade.Bootstrap.Services.CBCABookExtensions.GetCredits(contentItem);
+
+        // Can be > 1 Publisher so get comma-separated list
+        var terms = (IEnumerable<Orchard.Taxonomies.Models.TermPart>)bookPart.Publisher.Terms;
+        var publishers = new HtmlString(string.Join(", ", terms.Select(t => t.Name.ToString()).ToArray()));
+
+        <div class="col-lg-4 col-sm-6">
+            <div class='book-summary'>
+                <table class="table table-condensed">
+                    <tr>
+                        <td class="image">
+                            <img src="@bookPart.CoverImage.FirstMediaUrl" />
+                        </td>
+                        <td class="detail">
+                            <div class="title">
+                                @contentItem.TitlePart.Title
+                            </div>
+                            <div class="byLine">
+                                @credits
+                            </div>
+                            <div class="publisher">
+                                @publishers
+                            </div>
+                            <div class="isbn">
+                                ISBN: @bookPart.ISBN.Value
+                            </div>
+                            @if (bookReviewPart.Summary != null)
+                {
+                                <div class="summary">
+                                    @bookReviewPart.Summary.Value
+                                </div>
+                            }
+                            <a class="more btn btn-sm btn-info" href="@Url.ItemDisplayUrl((ContentItem)contentItem)"><i class='fa fa-hand-o-right'></i></a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+        </div>
+    }
+</div>
